@@ -674,7 +674,7 @@ function! s:readable_calculate_file_type() dict abort
     let r = "metal"
   elseif f =~ '\<app/mailers/.*\.rb'
     let r = "mailer"
-  elseif f =~ '\<app/models/'
+  elseif f =~ '\<app/models/' || f =~ '\<models/'
     let top = join(s:readfile(full_path,50),"\n")
     let class = matchstr(top,'\<Acti\w\w\u\w\+\%(::\h\w*\)\+\>')
     if class == "ActiveResource::Base"
@@ -687,6 +687,8 @@ function! s:readable_calculate_file_type() dict abort
       let r = "model-".class
     elseif f =~ '_mailer\.rb$'
       let r = "mailer"
+    elseif top =~ 'include Mongoid::Document'
+      let r = "model-mongoid"
     elseif top =~ '\<\%(validates_\w\+_of\|set_\%(table_name\|primary_key\)\|has_one\|has_many\|belongs_to\)\>'
       let r = "model-arb"
     else
@@ -3534,6 +3536,11 @@ function! s:BufSyntax()
         syn keyword rubyPadrinoARValidationMethod validate validates validate_on_create validate_on_update validates_acceptance_of validates_associated validates_confirmation_of validates_each validates_exclusion_of validates_format_of validates_inclusion_of validates_length_of validates_numericality_of validates_presence_of validates_size_of validates_uniqueness_of
         syn keyword rubyPadrinoMethod logger
       endif
+      if buffer.type_name('model-mongoid')
+        syn keyword rubyPadrinoMethod field index scope default_scope attr_accessible attr_protected attr_readonly embeds_many embedded_in embeds_one accepts_nested_attributes_for belongs_to has_many has_one recursively_embeds_many
+        syn keyword rubyPadrinoMethod after_initialize after_build before_validation after_validation before_create around_create after_create before_update around_update after_update before_save around_save after_save before_destroy around_destroy after_destroy
+        syn keyword rubyPadrinoARValidationMethod validate validates validate_on_create validate_on_update validates_acceptance_of validates_associated validates_confirmation_of validates_each validates_exclusion_of validates_format_of validates_inclusion_of validates_length_of validates_numericality_of validates_presence_of validates_size_of validates_uniqueness_of
+      endif
       if buffer.type_name('model-aro')
         syn keyword rubyPadrinoARMethod observe
       endif
@@ -3556,6 +3563,7 @@ function! s:BufSyntax()
           syn keyword rubyPadrinoMethod local_assigns
         endif
       elseif buffer.type_name('controller')
+        syn keyword rubyPadrinoControllerMethod get post delete patch put
         syn keyword rubyPadrinoControllerMethod helper helper_attr helper_method filter layout url_for serialize exempt_from_layout filter_parameter_logging hide_action cache_sweeper protect_from_forgery caches_page cache_page caches_action expire_page expire_action rescue_from
         syn keyword rubyPadrinoRenderMethod head redirect_to render_to_string respond_with
         syn match   rubyPadrinoRenderMethod '\<respond_to\>?\@!'
