@@ -3545,13 +3545,13 @@ function! s:BufSyntax()
         syn keyword rubyPadrinoARMethod observe
       endif
       if buffer.type_name('mailer')
-        syn keyword rubyPadrinoMethod logger url_for polymorphic_path polymorphic_url
+        syn keyword rubyPadrinoMethod logger url_for polymorphic_path polymorphic_url email
         syn keyword rubyPadrinoRenderMethod mail render
-        syn keyword rubyPadrinoControllerMethod attachments default helper helper_attr helper_method
+        syn keyword rubyPadrinoControllerMethod attachments default defaults helper helper_attr helper_method to subject from content_type
       endif
       if buffer.type_name('controller','view','helper')
-        syn keyword rubyPadrinoMethod params request response session headers cookies flash
-        syn keyword rubyPadrinoRenderMethod render
+        syn keyword rubyPadrinoMethod params request response session headers cookies flash content_type
+        syn keyword rubyPadrinoRenderMethod render redirect
         syn keyword rubyPadrinoMethod logger polymorphic_path polymorphic_url
       endif
       if buffer.type_name('helper','view')
