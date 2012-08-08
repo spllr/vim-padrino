@@ -3474,7 +3474,7 @@ function! s:helpermethods()
         \."option_groups_from_collection_for_select options_for_select options_from_collection_for_select "
         \."password_field password_field_tag path_to_audio path_to_image path_to_javascript path_to_stylesheet path_to_video phone_field phone_field_tag pluralize "
         \."radio_button radio_button_tag range_field range_field_tag raw remote_function reset_cycle "
-        \."safe_concat sanitize sanitize_css search_field search_field_tag select select_date select_datetime select_day select_hour select_minute select_month select_second select_tag select_time select_year simple_format sortable_element sortable_element_js strip_links strip_tags stylesheet_link_tag stylesheet_path submit_tag "
+        \."safe_concat sanitize sanitize_css search_field search_field_tag select select_date select_datetime select_day select_hour select_minute select_month select_second select_tag select_time select_year simple_format sortable_element sortable_element_js strip_links strip_tags stylesheet_link_tag stylesheet_path submit_tag button_tag "
         \."t tag telephone_field telephone_field_tag text_area text_area_tag text_field text_field_tag time_ago_in_words time_select time_zone_options_for_select time_zone_select translate truncate "
         \."update_page update_page_tag url_field url_field_tag url_for url_options "
         \."video_path video_tag visual_effect "
@@ -3546,12 +3546,12 @@ function! s:BufSyntax()
       endif
       if buffer.type_name('mailer')
         syn keyword rubyPadrinoMethod logger url_for polymorphic_path polymorphic_url email
-        syn keyword rubyPadrinoRenderMethod mail render
+        syn keyword rubyPadrinoRenderMethod mail render partial
         syn keyword rubyPadrinoControllerMethod attachments default defaults helper helper_attr helper_method to subject from content_type
       endif
       if buffer.type_name('controller','view','helper')
         syn keyword rubyPadrinoMethod params request response session headers cookies flash content_type
-        syn keyword rubyPadrinoRenderMethod render redirect
+        syn keyword rubyPadrinoRenderMethod render redirect partial
         syn keyword rubyPadrinoMethod logger polymorphic_path polymorphic_url
       endif
       if buffer.type_name('helper','view')
@@ -3559,6 +3559,7 @@ function! s:BufSyntax()
         syn match rubyPadrinoHelperMethod '\<select\>\%(\s*{\|\s*do\>\|\s*(\=\s*&\)\@!'
         syn match rubyPadrinoHelperMethod '\<\%(content_for?\=\|current_page?\)'
         syn match rubyPadrinoViewMethod '\.\@<!\<\(h\|html_escape\|u\|url_encode\|controller\)\>'
+        syn keyword rubyKeyword yield_content
         if buffer.type_name('view-partial')
           syn keyword rubyPadrinoMethod local_assigns
         endif
@@ -3655,10 +3656,11 @@ function! s:BufSyntax()
       exe 'syn keyword '.&syntax.'PadrinoMethod debugger logger polymorphic_path polymorphic_url contained containedin=@'.&syntax.'PadrinoRegions'
       exe 'syn keyword '.&syntax.'PadrinoMethod params request response session headers cookies flash contained containedin=@'.&syntax.'PadrinoRegions'
       exe 'syn match '.&syntax.'PadrinoViewMethod "\.\@<!\<\(h\|html_escape\|u\|url_encode\|controller\)\>" contained containedin=@'.&syntax.'PadrinoRegions'
+      exe 'syn keyword rubyKeyword yield_content'
       if buffer.type_name('view-partial')
         exe 'syn keyword '.&syntax.'PadrinoMethod local_assigns contained containedin=@'.&syntax.'PadrinoRegions'
       endif
-      exe 'syn keyword '.&syntax.'PadrinoRenderMethod render contained containedin=@'.&syntax.'PadrinoRegions'
+      exe 'syn keyword '.&syntax.'PadrinoRenderMethod render partial contained containedin=@'.&syntax.'PadrinoRegions'
       exe 'syn case match'
       set isk+=$
       exe 'syn keyword javascriptPadrinoFunction contained '.s:javascript_functions
