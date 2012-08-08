@@ -674,7 +674,7 @@ function! s:readable_calculate_file_type() dict abort
     let r = "metal"
   elseif f =~ '\<app/mailers/.*\.rb'
     let r = "mailer"
-  elseif f =~ '\<app/models/'
+  elseif f =~ '\<app/models/' || f =~ '\<models/'
     let top = join(s:readfile(full_path,50),"\n")
     let class = matchstr(top,'\<Acti\w\w\u\w\+\%(::\h\w*\)\+\>')
     if class == "ActiveResource::Base"
@@ -687,6 +687,8 @@ function! s:readable_calculate_file_type() dict abort
       let r = "model-".class
     elseif f =~ '_mailer\.rb$'
       let r = "mailer"
+    elseif top =~ 'include Mongoid::Document'
+      let r = "model-mongoid"
     elseif top =~ '\<\%(validates_\w\+_of\|set_\%(table_name\|primary_key\)\|has_one\|has_many\|belongs_to\)\>'
       let r = "model-arb"
     else
@@ -3472,7 +3474,7 @@ function! s:helpermethods()
         \."option_groups_from_collection_for_select options_for_select options_from_collection_for_select "
         \."password_field password_field_tag path_to_audio path_to_image path_to_javascript path_to_stylesheet path_to_video phone_field phone_field_tag pluralize "
         \."radio_button radio_button_tag range_field range_field_tag raw remote_function reset_cycle "
-        \."safe_concat sanitize sanitize_css search_field search_field_tag select select_date select_datetime select_day select_hour select_minute select_month select_second select_tag select_time select_year simple_format sortable_element sortable_element_js strip_links strip_tags stylesheet_link_tag stylesheet_path submit_tag "
+        \."safe_concat sanitize sanitize_css search_field search_field_tag select select_date select_datetime select_day select_hour select_minute select_month select_second select_tag select_time select_year simple_format sortable_element sortable_element_js strip_links strip_tags stylesheet_link_tag stylesheet_path submit_tag button_tag "
         \."t tag telephone_field telephone_field_tag text_area text_area_tag text_field text_field_tag time_ago_in_words time_select time_zone_options_for_select time_zone_select translate truncate "
         \."update_page update_page_tag url_field url_field_tag url_for url_options "
         \."video_path video_tag visual_effect "
@@ -3534,17 +3536,22 @@ function! s:BufSyntax()
         syn keyword rubyPadrinoARValidationMethod validate validates validate_on_create validate_on_update validates_acceptance_of validates_associated validates_confirmation_of validates_each validates_exclusion_of validates_format_of validates_inclusion_of validates_length_of validates_numericality_of validates_presence_of validates_size_of validates_uniqueness_of
         syn keyword rubyPadrinoMethod logger
       endif
+      if buffer.type_name('model-mongoid')
+        syn keyword rubyPadrinoMethod field index scope default_scope attr_accessible attr_protected attr_readonly embeds_many embedded_in embeds_one accepts_nested_attributes_for belongs_to has_many has_one recursively_embeds_many
+        syn keyword rubyPadrinoMethod after_initialize after_build before_validation after_validation before_create around_create after_create before_update around_update after_update before_save around_save after_save before_destroy around_destroy after_destroy
+        syn keyword rubyPadrinoARValidationMethod validate validates validate_on_create validate_on_update validates_acceptance_of validates_associated validates_confirmation_of validates_each validates_exclusion_of validates_format_of validates_inclusion_of validates_length_of validates_numericality_of validates_presence_of validates_size_of validates_uniqueness_of
+      endif
       if buffer.type_name('model-aro')
         syn keyword rubyPadrinoARMethod observe
       endif
       if buffer.type_name('mailer')
-        syn keyword rubyPadrinoMethod logger url_for polymorphic_path polymorphic_url
-        syn keyword rubyPadrinoRenderMethod mail render
-        syn keyword rubyPadrinoControllerMethod attachments default helper helper_attr helper_method
+        syn keyword rubyPadrinoMethod logger url_for polymorphic_path polymorphic_url email
+        syn keyword rubyPadrinoRenderMethod mail render partial
+        syn keyword rubyPadrinoControllerMethod attachments default defaults helper helper_attr helper_method to subject from content_type
       endif
       if buffer.type_name('controller','view','helper')
-        syn keyword rubyPadrinoMethod params request response session headers cookies flash
-        syn keyword rubyPadrinoRenderMethod render
+        syn keyword rubyPadrinoMethod params request response session headers cookies flash content_type
+        syn keyword rubyPadrinoRenderMethod render redirect partial
         syn keyword rubyPadrinoMethod logger polymorphic_path polymorphic_url
       endif
       if buffer.type_name('helper','view')
@@ -3552,12 +3559,14 @@ function! s:BufSyntax()
         syn match rubyPadrinoHelperMethod '\<select\>\%(\s*{\|\s*do\>\|\s*(\=\s*&\)\@!'
         syn match rubyPadrinoHelperMethod '\<\%(content_for?\=\|current_page?\)'
         syn match rubyPadrinoViewMethod '\.\@<!\<\(h\|html_escape\|u\|url_encode\|controller\)\>'
+        syn keyword rubyKeyword yield_content
         if buffer.type_name('view-partial')
           syn keyword rubyPadrinoMethod local_assigns
         endif
       elseif buffer.type_name('controller')
+        syn keyword rubyPadrinoControllerMethod get post delete patch put
         syn keyword rubyPadrinoControllerMethod helper helper_attr helper_method filter layout url_for serialize exempt_from_layout filter_parameter_logging hide_action cache_sweeper protect_from_forgery caches_page cache_page caches_action expire_page expire_action rescue_from
-        syn keyword rubyPadrinoRenderMethod head redirect_to render_to_string respond_with
+        syn keyword rubyPadrinoRenderMethod head redirect_to render_to_string respond_with halt
         syn match   rubyPadrinoRenderMethod '\<respond_to\>?\@!'
         syn keyword rubyPadrinoFilterMethod before_filter append_before_filter prepend_before_filter after_filter append_after_filter prepend_after_filter around_filter append_around_filter prepend_around_filter skip_before_filter skip_after_filter
         syn keyword rubyPadrinoFilterMethod verify
@@ -3647,10 +3656,11 @@ function! s:BufSyntax()
       exe 'syn keyword '.&syntax.'PadrinoMethod debugger logger polymorphic_path polymorphic_url contained containedin=@'.&syntax.'PadrinoRegions'
       exe 'syn keyword '.&syntax.'PadrinoMethod params request response session headers cookies flash contained containedin=@'.&syntax.'PadrinoRegions'
       exe 'syn match '.&syntax.'PadrinoViewMethod "\.\@<!\<\(h\|html_escape\|u\|url_encode\|controller\)\>" contained containedin=@'.&syntax.'PadrinoRegions'
+      exe 'syn keyword rubyKeyword yield_content'
       if buffer.type_name('view-partial')
         exe 'syn keyword '.&syntax.'PadrinoMethod local_assigns contained containedin=@'.&syntax.'PadrinoRegions'
       endif
-      exe 'syn keyword '.&syntax.'PadrinoRenderMethod render contained containedin=@'.&syntax.'PadrinoRegions'
+      exe 'syn keyword '.&syntax.'PadrinoRenderMethod render partial contained containedin=@'.&syntax.'PadrinoRegions'
       exe 'syn case match'
       set isk+=$
       exe 'syn keyword javascriptPadrinoFunction contained '.s:javascript_functions
